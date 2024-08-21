@@ -1,0 +1,58 @@
+# Import necessary libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load the dataset
+url = 'https://data.cityofnewyork.us/api/views/833y-fsy8/rows.csv?accessType=DOWNLOAD'
+df = pd.read_csv(url)
+
+# Tidy and transform data
+df['OCCUR_DATE'] = pd.to_datetime(df['OCCUR_DATE'])  # Convert 'OCCUR_DATE' to datetime format
+
+# Check for missing values and handle them
+missing_values = df.isnull().sum()
+df = df.dropna()  # Drop rows with missing values
+
+# Transform categorical data using .loc to avoid SettingWithCopyWarning
+df.loc[:, 'BORO'] = df['BORO'].astype('category')
+
+# Display cleaned data info
+df.info()
+
+# Extract year from OCCUR_DATE for trend analysis
+df['Year'] = df['OCCUR_DATE'].dt.year
+
+# Group by year and count incidents
+yearly_data = df.groupby('Year').size()
+
+# Plot the trend of shooting incidents over time
+plt.figure(figsize=(10, 6))
+sns.lineplot(data=yearly_data)
+plt.title('Number of Shooting Incidents Per Year in NYC')
+plt.xlabel('Year')
+plt.ylabel('Number of Incidents')
+plt.show()
+
+# Analyze potential bias
+
+# Borough distribution
+borough_distribution = df['BORO'].value_counts(normalize=True) * 100
+
+# Suspect and victim demographics
+# Check the actual column names present in the dataset
+print("Available columns:", df.columns)
+
+# Assuming columns 'PERP_RACE' and 'VIC_RACE' are present
+if 'PERP_RACE' in df.columns:
+    suspect_race_distribution = df['PERP_RACE'].value_counts(normalize=True) * 100
+    print("Suspect Race Distribution (%):\n", suspect_race_distribution)
+else:
+    print("'PERP_RACE' column not found in the dataset.")
+
+if 'VIC_RACE' in df.columns:
+    victim_race_distribution = df['VIC_RACE'].value_counts(normalize=True) * 100
+    print("Victim Race Distribution (%):\n", victim_race_distribution)
+else:
+    print("'VIC_RACE' column not found in the dataset.")
